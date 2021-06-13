@@ -1,0 +1,2 @@
+getUpdates ='/getUpdates'
+sendMessage ="/sendMessage"
