@@ -2,48 +2,38 @@ from TelegramBot.config import TOKEN, root_url_bot,url_Cur,USD
 from TelegramBot.method import sendMessage, getUpdates
 import requests
 
-# name = input("Введите валюту: Напрмер: Гривен или Доллар США или Евро ")
-response_Cur = requests.get(url_Cur)
-data_Cur = response_Cur.json()
+okCodes = (200,201)
 
-res = requests.get(root_url_bot+TOKEN+getUpdates)
-data_sms = res.json()
+def getBotUpdates(token):
+    res = requests.get(root_url_bot+token+getUpdates)
+    if res.status_code in okCodes:
+        result = res.json()
+        return result
+    else:
+        print(f"Ошибка в запросе со статусом: {res.status_code}")
 
-def CurrentRate(data_Cur,name):
-    for i in data_Cur:
-        if i["Cur_Name"] == name:
-            print("Курс "+name+" равен "+str(i["Cur_OfficialRate"]))
+def sendMesage(mesage_text, id_chat):
+    url = root_url_bot + TOKEN + sendMessage + "?" + "chat_id=" + str(id_chat) + "&" + "text=" + mesage_text
+    res = requests.post(url)
+    if res.status_code in okCodes:
+        return True
+    else:
+        return False
 
-def CurrentUSD(data_Cur,USD=USD):
-    for i in data_Cur:
-        if i["Cur_Name"] == USD:
-            print("Курс "+USD+" равен "+str(i["Cur_OfficialRate"]))
-
-def CurAbbreviation(data_Cur,Abbreviation):
-    for i in data_Cur:
-        if i["Cur_Abbreviation"] == Abbreviation:
-            return "Курс "+Abbreviation+" равен "+str(i["Cur_OfficialRate"]) + " на " + i["Date"][:10]
-
-def smsХai():
-    for i in range(len(data_sms["result"])):
-        if data_sms["result"][-1]["message"]["text"] == "/start":
-            id_chat = data_sms["result"][-1]["message"]["chat"]["id"]
-            requests.post(root_url_bot+TOKEN+sendMessage+"?"+"chat_id="+str(id_chat)+"&"+"text="+"XAI")
-            break
-
-def sendsmsCurRate():
-    id_chat = data_sms["result"][-1]["message"]["chat"]["id"]
-    last_test = data_sms["result"][-1]["message"]["text"]
-    for i in data_Cur:
-        if i["Cur_Abbreviation"] in last_test:
-            # Cur_Abbreviation(data, i["Cur_Abbreviation"])
-            requests.post(root_url_bot + TOKEN + sendMessage + "?" + "chat_id=" + str(id_chat) + "&" + "text=" +
-                          CurAbbreviation(data_Cur, i["Cur_Abbreviation"]))
+prev_update_id = 0
+while True:
+    res = getBotUpdates(TOKEN)
+    last_update_id = res["result"][-1]["update_id"]
+    if last_update_id > prev_update_id:
+        chat_id = res["result"][-1]["message"]["chat"]["id"]
+        message = "xxx"
+        sendMesage(message, chat_id)
+        prev_update_id = last_update_id
 
 
-# Current_Rate(data,name)
-# Current_USD(data)
-smsХai()
-sendsmsCurRate()
-# GetUpdates()
-# Cur_Abbreviation(data,"USD")
+res = getBotUpdates(TOKEN)
+print(res)
+# chat_id = res["result"][-1]["message"]["chat"]["id"]
+# message = "xxx"
+# sendMesage(message,chat_id)
+
