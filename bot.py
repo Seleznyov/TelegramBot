@@ -13,13 +13,14 @@ def getAllRates():
 
 def exctractRate(rates, name):
     rate = None
+    di = {'Approve': 0, 'Errore': 'не найдена данная валюта'}
     for i in rates:
-        if i["Cur_Abbreviation"] == name:
+        if i["Cur_Abbreviation"] in name:
              rate = i
     if rate:
         return rate
     else:
-        return "не найдено"
+        return di
 
 def getBotUpdates(token):
     res = requests.get(root_url_bot+token+getUpdates)
@@ -43,11 +44,18 @@ while True:
     last_update_id = res["result"][-1]["update_id"]
     if last_update_id > prev_update_id:
         chat_id = res["result"][-1]["message"]["chat"]["id"]
-        last_update_text = res["result"][-1]["message"]["text"]
-        nameCur = last_update_text[-3:]
+        last_update_text = res["result"][-1]["message"]["text"].upper()
+        nameCurAll = last_update_text
+        nameCur = []
+        for i in nameCurAll.split():
+            if len(i) == 3:
+                nameCur.append(i)
         rates = getAllRates()
-        result = exctractRate(rates,nameCur)
-        message = f"Курс на сегодня {result['Date']} для {result['Cur_Abbreviation']} : {result['Cur_OfficialRate']}"
+        result = exctractRate(rates, nameCur)
+        if "Errore" in result:
+            message = f"{result['Errore']}"
+        else:
+            message = f"Курс на сегодня {result['Date'][:10]} для {result['Cur_Abbreviation']} : {result['Cur_OfficialRate']}"
         sendMesage(message, chat_id)
     prev_update_id = last_update_id
 
