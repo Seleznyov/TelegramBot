@@ -6,4 +6,3 @@ USD = "Доллар США"
 url = 'https://www.nbrb.by/api/exrates/currencies/298'
 url2 = "https://www.nbrb.by/api/exrates/rates/"
 url_Cur = "https://www.nbrb.by/api/exrates/rates?periodicity=0"
-#Тест новая ветка и попытка ее слить с мастер
