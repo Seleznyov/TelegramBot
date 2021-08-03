@@ -3,19 +3,23 @@ from TelegramBot.method import sendMessage, getUpdates
 import requests
 
 okCodes = (200,201)
-def allRates(name):
+def getAllRates():
     res = requests.get(url_Cur)
-    result = res.json()
-    for i in result:
-        if i["Cur_Abbreviation"] == name:
-            return i["Cur_OfficialRate"]
+    if res.status_code in okCodes:
+        result = res.json()
+        return result
+    else:
+        print(f"Ошибка в запросе со статусом: {res.status_code}")
 
-allcurrenciesList = []
-def allcurrencies():
-    res = requests.get(url_Cur)
-    result = res.json()
-    for i in result:
-        allcurrenciesList.append(i["Cur_Abbreviation"])
+def exctractRate(rates, name):
+    rate = None
+    for i in rates:
+        if i["Cur_Abbreviation"] == name:
+             rate = i
+    if rate:
+        return rate
+    else:
+        return "не найдено"
 
 def getBotUpdates(token):
     res = requests.get(root_url_bot+token+getUpdates)
@@ -34,25 +38,21 @@ def sendMesage(mesage_text, id_chat):
         return False
 
 prev_update_id = 0
-allcurrencies()
 while True:
     res = getBotUpdates(TOKEN)
     last_update_id = res["result"][-1]["update_id"]
     if last_update_id > prev_update_id:
         chat_id = res["result"][-1]["message"]["chat"]["id"]
         last_update_text = res["result"][-1]["message"]["text"]
-        for nameCur in allcurrenciesList:
-            if nameCur in last_update_text:
-                message = nameCur
-                sendMesage(str(allRates(message)), chat_id)
-        # else:
-        #     message = "sorry try again"
-        #     sendMesage(message, chat_id)
+        nameCur = last_update_text[-3:]
+        rates = getAllRates()
+        result = exctractRate(rates,nameCur)
+        message = f"Курс на сегодня {result['Date']} для {result['Cur_Abbreviation']} : {result['Cur_OfficialRate']}"
+        sendMesage(message, chat_id)
     prev_update_id = last_update_id
 
 
 # allRates("BGN")
-
 res = getBotUpdates(TOKEN)
 print(res)
 
